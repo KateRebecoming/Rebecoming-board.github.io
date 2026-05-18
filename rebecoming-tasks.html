@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebecoming — Tasks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface2: #F4F1EC;
+  --border: rgba(0,0,0,0.08);
+  --border-md: rgba(0,0,0,0.14);
+  --text: #1A1714;
+  --text-muted: #7A7470;
+  --text-faint: #B0AAA4;
+  --accent: #8B6B5A;
+  --accent-light: #F0E8E2;
+  --todo-dot: #C9B99A;
+  --prog-dot: #8B6B5A;
+  --done-dot: #6B8B6B;
+  --high: #C0392B;
+  --high-bg: #FDF2F0;
+  --med: #A0722A;
+  --med-bg: #FDF8EE;
+  --low: #4A7C59;
+  --low-bg: #EEF4EF;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Header ── */
+.header {
+  padding: 2rem 2.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.header-left h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1.1;
+}
+.header-left p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 300;
+}
+.header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* ── Buttons ── */
+button { font-family: var(--font-body); cursor: pointer; transition: all 0.15s; }
+.btn-primary {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-ghost.active { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
+
+/* ── Toolbar (filters) ── */
+.toolbar {
+  padding: 0.75rem 2.5rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.filter-chip {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+.filter-chip:hover { background: var(--surface2); color: var(--text); }
+.filter-chip.active { background: var(--surface2); color: var(--text); border-color: var(--border-md); }
+.search-wrap { position: relative; margin-left: auto; }
+.search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-faint); pointer-events: none; }
+.search-wrap input {
+  padding: 5px 12px 5px 30px;
+  font-size: 13px;
+  border: 1px solid var(--border-md);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  width: 200px;
+}
+.search-wrap input:focus { outline: none; border-color: var(--accent); }
+
+/* ── Main layout ── */
+.main { padding: 1.5rem 2.5rem 3rem; }
+
+/* ── Board ── */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 700px) { .board { grid-template-columns: 1fr; } .main { padding: 1rem; } .header { padding: 1.25rem 1rem 1rem; } .toolbar { padding: 0.75rem 1rem; } }
+
+.col {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  min-height: 200px;
+}
+.col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+.col-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.col-dot { width: 7px; height: 7px; border-radius: 50%; }
+.col-count {
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border-md);
+  border-radius: 999px;
+  padding: 0 7px;
+  color: var(--text-faint);
+}
+.col-add-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.col-add-btn:hover { color: var(--text-muted); background: var(--surface); }
+
+/* ── Task card ── */
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  margin-bottom: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.task-card:hover { border-color: var(--border-md); box-shadow: 0 2px 8px rgba(0,0,0,0.05); transform: translateY(-1px); }
+.task-card.dragging { opacity: 0.35; }
+.task-title { font-size: 13px; font-weight: 400; color: var(--text); margin-bottom: 8px; line-height: 1.45; }
+.task-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.badge-high { background: var(--high-bg); color: var(--high); }
+.badge-medium { background: var(--med-bg); color: var(--med); }
+.badge-low { background: var(--low-bg); color: var(--low); }
+.badge-label { background: var(--accent-light); color: var(--accent); font-size: 10px; padding: 2px 7px; border-radius: 999px; }
+.due-date { font-size: 11px; color: var(--text-faint); margin-left: auto; display: flex; align-items: center; gap: 3px; }
+.due-date.overdue { color: var(--high); }
+.col-drop-zone { min-height: 32px; border-radius: var(--radius-sm); border: 2px dashed transparent; transition: 0.15s; }
+.col-drop-zone.over { border-color: var(--accent); background: var(--accent-light); }
+.empty-col { text-align: center; padding: 28px 0 12px; font-size: 12px; color: var(--text-faint); font-style: italic; font-family: var(--font-display); }
+
+/* ── List view ── */
+.list-view { display: flex; flex-direction: column; gap: 5px; }
+.list-header {
+  display: grid;
+  grid-template-columns: 16px 1fr 100px 80px 80px;
+  gap: 10px;
+  padding: 5px 14px;
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.list-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  display: grid;
+  grid-template-columns: 16px 1fr 100px 80px 80px;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.list-row:hover { border-color: var(--border-md); }
+.list-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.list-title { font-size: 13px; color: var(--text); }
+.list-cell { font-size: 12px; color: var(--text-muted); }
+@media (max-width: 600px) {
+  .list-header { grid-template-columns: 16px 1fr 80px; }
+  .list-row { grid-template-columns: 16px 1fr 80px; }
+  .list-row .list-cell:nth-child(4), .list-row .list-cell:nth-child(5),
+  .list-header span:nth-child(4), .list-header span:nth-child(5) { display: none; }
+}
+
+/* ── Modal ── */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,16,12,0.4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 1rem 2rem;
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-md);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.modal-header h2 { font-family: var(--font-display); font-size: 20px; font-weight: 400; letter-spacing: 0.01em; }
+.modal-close { background: transparent; border: none; font-size: 20px; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; }
+.modal-close:hover { background: var(--surface2); }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 11px;
+  font-size: 13px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { outline: none; border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 72px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.btn-delete { background: transparent; border: 1px solid rgba(192,57,43,0.25); border-radius: var(--radius-sm); padding: 7px 14px; font-size: 13px; color: var(--high); margin-right: auto; }
+.btn-delete:hover { background: var(--high-bg); }
+.btn-save { background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); padding: 7px 18px; font-size: 13px; }
+.btn-save:hover { opacity: 0.85; }
+.btn-cancel { background: transparent; border: 1px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 14px; font-size: 13px; color: var(--text-muted); }
+.btn-cancel:hover { background: var(--surface2); color: var(--text); }
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.stat { display: flex; align-items: center; gap: 5px; }
+.stat strong { color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Rebecoming</h1>
+    <p>App development tracker</p>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;gap:4px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px">
+      <button class="btn-ghost active" id="vb-board" onclick="setView('board')">Board</button>
+      <button class="btn-ghost" id="vb-list" onclick="setView('list')">List</button>
+    </div>
+    <button class="btn-primary" onclick="openModal()">+ New task</button>
+  </div>
+</header>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="toolbar">
+  <button class="filter-chip active" id="fc-all" onclick="setFilter('all')">All</button>
+  <button class="filter-chip" id="fc-todo" onclick="setFilter('todo')">To do</button>
+  <button class="filter-chip" id="fc-inprogress" onclick="setFilter('inprogress')">In progress</button>
+  <button class="filter-chip" id="fc-done" onclick="setFilter('done')">Done</button>
+  <div class="search-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="Search…" oninput="render()">
+  </div>
+</div>
+
+<main class="main" id="main-content"></main>
+<div id="modal-root"></div>
+
+<script>
+const STORAGE_KEY = 'rebecoming-tasks-v1';
+const PRIORITIES = ['High', 'Medium', 'Low'];
+const LABELS = ['Concept', 'Design', 'Development', 'Content', 'Marketing', 'Business', 'Research', 'Tech'];
+const STATUS_LABELS = { todo: 'To do', inprogress: 'In progress', done: 'Done' };
+const STATUS_COLORS = { todo: '#C9B99A', inprogress: '#8B6B5A', done: '#6B8B6B' };
+
+let tasks = [];
+let nextId = 1;
+let view = 'board';
+let filter = 'all';
+let draggingId = null;
+let modalTask = null;
+let editMode = false;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      tasks = data.tasks || [];
+      nextId = data.nextId || (tasks.length ? Math.max(...tasks.map(t => t.id)) + 1 : 1);
+    } else {
+      tasks = [
+        { id: 1, title: 'Define core nervous system regulation features', status: 'todo', priority: 'High', label: 'Concept', due: '', notes: 'Breath work, somatic check-ins, window of tolerance tracker?' },
+        { id: 2, title: 'Sketch initial UX flows', status: 'todo', priority: 'High', label: 'Design', due: '', notes: '' },
+        { id: 3, title: 'Research iOS development options (SwiftUI vs React Native)', status: 'todo', priority: 'Medium', label: 'Research', due: '', notes: '' },
+      ];
+      nextId = 4;
+      save();
+    }
+  } catch(e) { tasks = []; nextId = 1; }
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, nextId })); } catch(e) {}
+}
+
+function filtered() {
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  return tasks.filter(t => {
+    if (filter !== 'all' && t.status !== filter) return false;
+    if (q && !t.title.toLowerCase().includes(q) && !(t.label || '').toLowerCase().includes(q) && !(t.notes || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function setView(v) {
+  view = v;
+  document.querySelectorAll('.btn-ghost').forEach(b => b.classList.remove('active'));
+  document.getElementById('vb-' + v)?.classList.add('active');
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  document.getElementById('fc-' + f)?.classList.add('active');
+  render();
+}
+
+function render() {
+  renderStats();
+  const ft = filtered();
+  const mc = document.getElementById('main-content');
+  if (view === 'board') renderBoard(mc, ft);
+  else renderList(mc, ft);
+}
+
+function renderStats() {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.status === 'done').length;
+  const high = tasks.filter(t => t.priority === 'High' && t.status !== 'done').length;
+  document.getElementById('stats-bar').innerHTML = `
+    <span class="stat"><strong>${total}</strong> tasks total</span>
+    <span class="stat"><strong>${done}</strong> completed</span>
+    <span class="stat" style="color:${high > 0 ? 'var(--high)' : 'inherit'}"><strong>${high}</strong> high priority open</span>
+  `;
+}
+
+function renderBoard(mc, ft) {
+  mc.innerHTML = `<div class="board">${['todo','inprogress','done'].map(s => {
+    const col = ft.filter(t => t.status === s);
+    return `<div class="col" ondragover="onDragOver(event,'${s}')" ondrop="onDrop(event,'${s}')" ondragleave="onDragLeave(event)">
+      <div class="col-header">
+        <span class="col-title"><span class="col-dot" style="background:${STATUS_COLORS[s]}"></span>${STATUS_LABELS[s]}<span class="col-count">${col.length}</span></span>
+        <button class="col-add-btn" onclick="openModal('${s}')" title="Add task">+</button>
+      </div>
+      ${col.length === 0 ? `<div class="empty-col">Nothing here yet</div>` : ''}
+      ${col.map(t => taskCard(t)).join('')}
+      <div class="col-drop-zone" ondragover="onDragOver(event,'${s}')" ondrop="onDrop(event,'${s}')"></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function taskCard(t) {
+  const od = t.due && new Date(t.due) < new Date() && t.status !== 'done';
+  const priClass = { High: 'badge-high', Medium: 'badge-medium', Low: 'badge-low' }[t.priority] || '';
+  return `<div class="task-card" id="tc-${t.id}" draggable="true"
+    onclick="openModal(null,${t.id})"
+    ondragstart="onDragStart(event,${t.id})"
+    ondragend="onDragEnd()">
+    <div class="task-title">${esc(t.title)}</div>
+    <div class="task-meta">
+      <span class="badge ${priClass}">${t.priority}</span>
+      ${t.label ? `<span class="badge-label">${esc(t.label)}</span>` : ''}
+      ${t.due ? `<span class="due-date${od ? ' overdue' : ''}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${fmtDate(t.due)}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderList(mc, ft) {
+  if (!ft.length) {
+    mc.innerHTML = `<div style="text-align:center;padding:4rem;color:var(--text-faint);font-family:var(--font-display);font-size:18px;font-weight:300;font-style:italic">Nothing to show</div>`;
+    return;
+  }
+  const priClass = { High: 'badge-high', Medium: 'badge-medium', Low: 'badge-low' };
+  mc.innerHTML = `<div class="list-view">
+    <div class="list-header">
+      <span></span>
+      <span>Title</span>
+      <span>Status</span>
+      <span>Priority</span>
+      <span>Due</span>
+    </div>
+    ${ft.map(t => {
+      const od = t.due && new Date(t.due) < new Date() && t.status !== 'done';
+      return `<div class="list-row" onclick="openModal(null,${t.id})">
+        <span class="list-dot" style="background:${STATUS_COLORS[t.status]}"></span>
+        <span class="list-title">${esc(t.title)}${t.label ? ` <span class="badge-label">${esc(t.label)}</span>` : ''}</span>
+        <span class="list-cell" style="color:${STATUS_COLORS[t.status]}">${STATUS_LABELS[t.status]}</span>
+        <span class="list-cell"><span class="badge ${priClass[t.priority]||''}">${t.priority}</span></span>
+        <span class="list-cell${od?' overdue':''}" style="${od?'color:var(--high)':''}">${t.due ? fmtDate(t.due) : '—'}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function onDragStart(e, id) { draggingId = id; setTimeout(() => document.getElementById('tc-' + id)?.classList.add('dragging'), 0); }
+function onDragEnd() { draggingId = null; document.querySelectorAll('.task-card').forEach(c => c.classList.remove('dragging')); document.querySelectorAll('.col-drop-zone,.col').forEach(z => z.classList.remove('over')); }
+function onDragOver(e, s) { e.preventDefault(); e.currentTarget.classList.add('over'); }
+function onDragLeave(e) { e.currentTarget.classList.remove('over'); }
+function onDrop(e, s) {
+  e.preventDefault();
+  document.querySelectorAll('.col-drop-zone,.col').forEach(z => z.classList.remove('over'));
+  if (draggingId) { const t = tasks.find(t => t.id === draggingId); if (t) { t.status = s; save(); render(); } }
+}
+
+function openModal(defaultStatus, editId) {
+  editMode = !!editId;
+  modalTask = editId
+    ? { ...tasks.find(t => t.id === editId) }
+    : { id: nextId, title: '', status: defaultStatus || 'todo', priority: 'Medium', label: '', due: '', notes: '' };
+  renderModal();
+}
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; modalTask = null; }
+
+function renderModal() {
+  const t = modalTask;
+  document.getElementById('modal-root').innerHTML = `<div class="modal-bg" onclick="bgClose(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>${editMode ? 'Edit task' : 'New task'}</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="f-title" type="text" value="${esc(t.title)}" placeholder="What needs doing?">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="todo" ${t.status==='todo'?'selected':''}>To do</option>
+            <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In progress</option>
+            <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="f-priority">
+            ${PRIORITIES.map(p => `<option ${t.priority===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <select id="f-label">
+            <option value="">None</option>
+            ${LABELS.map(l => `<option ${t.label===l?'selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due date</label>
+          <input id="f-due" type="date" value="${esc(t.due||'')}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="f-notes">${esc(t.notes||'')}</textarea>
+      </div>
+      <div class="form-actions">
+        ${editMode ? `<button class="btn-delete" onclick="deleteTask(${t.id})">Delete</button>` : ''}
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveTask()">Save</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(() => document.getElementById('f-title')?.focus(), 50);
+}
+
+function bgClose(e) { if (e.target === e.currentTarget) closeModal(); }
+
+function deleteTask(id) { tasks = tasks.filter(t => t.id !== id); save(); closeModal(); render(); }
+
+function saveTask() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').style.borderColor = 'var(--high)'; return; }
+  const updated = {
+    ...modalTask,
+    title,
+    status: document.getElementById('f-status').value,
+    priority: document.getElementById('f-priority').value,
+    label: document.getElementById('f-label').value,
+    due: document.getElementById('f-due').value,
+    notes: document.getElementById('f-notes').value,
+  };
+  if (editMode) { tasks = tasks.map(t => t.id === updated.id ? updated : t); }
+  else { tasks.push(updated); nextId++; }
+  save(); closeModal(); render();
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+load();
+render();
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
